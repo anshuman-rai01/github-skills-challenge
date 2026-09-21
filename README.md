@@ -77,6 +77,39 @@ One limitation is that the detector uses fixed, global thresholds. It does not
 learn the service's normal baseline or correlate events across time, so a
 gradual performance change that remains below the thresholds could be missed.
 
+## AIOps Event Flow Verification
+
+The event-processing workflow uses the existing components in this order:
+
+1. **Event/message:** `AnomalyDetector.detect` creates an `ANOMALY` event when a
+	record has an abnormal metric or concerning log level. The event contains the
+	service, timestamp, type, detection reasons, and original source record.
+2. **Producer:** `EventProducer.publish` accepts the event and forwards it to
+	its configured topic, returning `True` for a published event.
+3. **Topic:** `EventTopic` stores the event in its in-memory message list. The
+	pipeline uses the same `service-events` topic for both publication and
+	consumption.
+4. **Consumer:** `EventConsumer.consume` reads the topic messages and returns
+	the received events to the pipeline.
+5. **Downstream AIOps component:** `run_pipeline` collects the consumed events
+	in `events_consumed`, and the CLI prints their service, timestamp, type, and
+	reasons as the final AIOps result.
+
+### Execution Result
+
+Running `python3 src/aiops_pipeline.py` processed 10 records and reported:
+
+| Result | Value |
+| --- | ---: |
+| Anomalies detected | 2 |
+| Events consumed | 2 |
+| Event timestamps | `2026-09-20T10:05:00`, `2026-09-20T10:06:00` |
+
+Both consumed events retained their anomaly type, payment-service identity,
+source timestamp, metric/log reasons, and source record. This verifies that an
+anomaly can travel through detection, production, topic publication,
+consumption, and the downstream AIOps report.
+
 ## Repository Components
 
 | Concern | File or component | Purpose |
