@@ -110,6 +110,21 @@ source timestamp, metric/log reasons, and source record. This verifies that an
 anomaly can travel through detection, production, topic publication,
 consumption, and the downstream AIOps report.
 
+## Workflow Investigation and Corrections
+
+The initial workflow review identified three issues within the existing
+architecture:
+
+| Affected component | Cause | Correction and verification |
+| --- | --- | --- |
+| `AnomalyDetector` | The detector checked only for `WARNING`, while the supplied incident records use `ERROR`. Metric anomalies were detected, but the relevant log evidence was omitted. | Treat both `WARNING` and `ERROR` as concerning log levels. Re-running detection added `Error log detected` to both incident events and did not flag any normal `INFO` record. |
+| `EventConsumer` and `EventTopic` wiring in `aiops_pipeline.py` | The producer published to `service-events`, but the consumer read from a separate empty `anomaly-events` topic. | Configure the consumer with the producer's topic. Re-running the pipeline changed `Events consumed` from 0 to 2, matching the 2 detected events. |
+| `aiops_pipeline.py`, `event_producer.py`, and `event_consumer.py` imports | Internal imports assumed `src` was manually added to `PYTHONPATH`, so package-level component execution failed with `ModuleNotFoundError`. | Use package-relative imports with a fallback for direct script execution. Both `python3 -m src.aiops_pipeline` and `python3 src/aiops_pipeline.py` now complete successfully. |
+
+The corrected workflow processes all 10 records, detects and publishes the two
+expected anomaly events, consumes both events, and presents them in the final
+AIOps report. The full test suite passes with 9 tests.
+
 ## Repository Components
 
 | Concern | File or component | Purpose |
@@ -128,6 +143,12 @@ consumption, and the downstream AIOps report.
 
 ```bash
 python3 src/aiops_pipeline.py
+```
+
+The package entry point is also supported:
+
+```bash
+python3 -m src.aiops_pipeline
 ```
 
 ---
