@@ -125,6 +125,24 @@ The corrected workflow processes all 10 records, detects and publishes the two
 expected anomaly events, consumes both events, and presents them in the final
 AIOps report. The full test suite passes with 9 tests.
 
+## End-to-End Pipeline Execution
+
+The corrected workflow was executed with `python3 src/aiops_pipeline.py` and
+verified with assertions at every handoff:
+
+| Stage | Verification result |
+| --- | --- |
+| Operational data | 10 records loaded and processed from `data/service_data.json` |
+| Anomaly detection | 2 abnormal records identified at `10:05` and `10:06` |
+| Event generation | Each detected record produced an `ANOMALY` event with source data and reasons |
+| Producer and topic | 2 events successfully published to `service-events` |
+| Consumer | 2 events received from the same topic; consumed events matched published events |
+| AIOps processing | `run_pipeline` returned both consumed events and the CLI rendered them |
+| Final operational issue | Payment-service timeout at `10:05`; database connection timeout with high CPU/memory at `10:06` |
+
+This demonstrates the complete flow: operational data -> anomaly detection ->
+event -> producer -> topic -> consumer -> AIOps result.
+
 ## Repository Components
 
 | Concern | File or component | Purpose |
