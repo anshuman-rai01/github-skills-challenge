@@ -40,6 +40,20 @@ def test_anomalous_record_is_detected():
 
     assert event is not None
     assert event["type"] == "ANOMALY"
+    assert "High response time" in event["reasons"]
+    assert "Error log detected" in event["reasons"]
+
+
+def test_pipeline_reports_detected_events():
+    result = run_pipeline("data/service_data.json")
+
+    assert result["records_processed"] == 10
+    assert len(result["anomalies_detected"]) == 2
+    assert result["events_consumed"] == result["anomalies_detected"]
+    assert {event["timestamp"] for event in result["events_consumed"]} == {
+        "2026-09-20T10:05:00",
+        "2026-09-20T10:06:00",
+    }
 
 
 def test_producer_publishes_event():

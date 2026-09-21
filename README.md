@@ -52,13 +52,38 @@ The observations below are based on the 10 records in
 	time threshold and have `ERROR` log levels. Metrics and logs return to the
 	normal range at `10:07`, suggesting the issue is temporary in this sample.
 
+## Anomaly Detection Analysis
+
+The provided `AnomalyDetector` was used with its configured thresholds:
+response time greater than 500 ms, CPU utilization greater than 80%, and memory
+utilization greater than 80%. `WARNING` and `ERROR` log levels are also treated
+as concerning events. The pipeline processed all 10 records and published the
+detected events through the existing in-memory topic and consumer components.
+
+### Detection Report
+
+| Timestamp | Metric and log evidence | Detection reasons |
+| --- | --- | --- |
+| `2026-09-20T10:05:00` | 610 ms response time; `ERROR`; `Payment service timeout` | High response time; error log detected |
+| `2026-09-20T10:06:00` | 640 ms response time, 94% CPU, 91% memory; `ERROR`; `Database connection timeout` | High response time; high CPU utilization; high memory utilization; error log detected |
+
+The result distinguishes the 2 incident observations from the 8 normal
+observations. No expected anomaly was missed in this dataset: both `ERROR`
+timeout records were detected, including their relevant metric and log reasons.
+No normal event was incorrectly flagged; all `INFO` records remain below the
+configured metric thresholds and were not reported as anomalies.
+
+One limitation is that the detector uses fixed, global thresholds. It does not
+learn the service's normal baseline or correlate events across time, so a
+gradual performance change that remains below the thresholds could be missed.
+
 ## Repository Components
 
 | Concern | File or component | Purpose |
 | --- | --- | --- |
 | Operational data | [`data/service_data.json`](data/service_data.json) | Sample `payment-service` telemetry and log records. |
 | Metrics and logs | [`data/service_data.json`](data/service_data.json) | Provides response time, CPU, memory, log level, message, service, and timestamp fields. |
-| Anomaly detection | [`src/anomaly_detector.py`](src/anomaly_detector.py) | Applies response-time, CPU, and memory thresholds and flags warning-level logs. It returns an `ANOMALY` event with reasons and the source record. |
+| Anomaly detection | [`src/anomaly_detector.py`](src/anomaly_detector.py) | Applies response-time, CPU, and memory thresholds and flags warning/error-level logs. It returns an `ANOMALY` event with reasons and the source record. |
 | Event production | [`src/event_producer.py`](src/event_producer.py) | Publishes non-empty anomaly events to an `EventTopic`. |
 | Event topics | [`src/event_topic.py`](src/event_topic.py) | Implements a named, in-memory message list with publish, read, and clear operations. |
 | Event consumption | [`src/event_consumer.py`](src/event_consumer.py) | Reads messages from an `EventTopic` for downstream processing. |
