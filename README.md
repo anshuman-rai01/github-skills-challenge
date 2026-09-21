@@ -157,6 +157,22 @@ event -> producer -> topic -> consumer -> AIOps result.
 | Supporting calculations | [`src/calculations.py`](src/calculations.py) | Contains standalone circle-area and Fibonacci examples covered by the general test suite; it is not part of the AIOps flow. |
 | Tests | [`tests/test_aiops_pipeline.py`](tests/test_aiops_pipeline.py) and [`tests/calculations_test.py`](tests/calculations_test.py) | Verify detector, producer, consumer, topic, and calculation behavior. |
 
+## Reproducing the Demonstration
+
+From a fresh checkout, use Python 3.13 or another supported Python 3 version,
+then run the following commands from the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest -q
+```
+
+The test suite should report 9 passing tests. The tests also verify normal
+records, anomaly reasons, event publication, topic delivery, and the complete
+pipeline result.
+
 ## Running the Pipeline
 
 ```bash
@@ -168,6 +184,11 @@ The package entry point is also supported:
 ```bash
 python3 -m src.aiops_pipeline
 ```
+
+The expected result is 10 records processed, 2 anomalies detected, and 2
+events consumed. The final report identifies a payment-service timeout at
+`2026-09-20T10:05:00` and a database connection timeout with high CPU and
+memory utilization at `2026-09-20T10:06:00`.
 
 ---
 
