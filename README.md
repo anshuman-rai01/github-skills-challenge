@@ -190,6 +190,24 @@ events consumed. The final report identifies a payment-service timeout at
 `2026-09-20T10:05:00` and a database connection timeout with high CPU and
 memory utilization at `2026-09-20T10:06:00`.
 
+## Validation Results
+
+The provided validation mechanisms were run from the repository root after the
+workflow corrections:
+
+```text
+python -m pytest -q       -> 9 passed
+python src/aiops_pipeline.py -> completed successfully
+python -m src.aiops_pipeline -> completed successfully
+```
+
+The validation confirms that the operational JSON data is loaded, normal and
+abnormal observations are distinguished, anomaly events are generated with
+reasons, events move through the producer/topic/consumer path, consumers return
+the generated events, and the final AIOps report completes successfully. Both
+workflow entry points report 10 records processed, 2 anomalies detected, and 2
+events consumed.
+
 ---
 
 &copy; 2025 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
