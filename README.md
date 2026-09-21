@@ -20,6 +20,38 @@ configured thresholds, explains the anomaly with one or more reasons, and
 publishes the resulting event for downstream consumption. It is a deliberately
 small in-memory simulation rather than a production monitoring platform.
 
+## Logs and Metrics Analysis
+
+The observations below are based on the 10 records in
+[`data/service_data.json`](data/service_data.json).
+
+1. **Metric fields:** `response_time_ms` is the request-latency metric, while
+	`cpu_percent` and `memory_percent` are resource-utilization metrics. Their
+	numeric values can be compared over time and against operational thresholds.
+
+2. **Log fields:** `log_level` and `message` represent application log
+	information. The dataset uses `INFO` for successful requests and `ERROR` for
+	timeout conditions. `service` identifies the emitting service, while
+	`timestamp` provides context for both the metrics and the log entry.
+
+3. **Timestamp usage:** Timestamps are ISO-style date-time strings, all on
+	`2026-09-20`, recorded at one-minute intervals from `10:00:00` through
+	`10:09:00`. They provide the chronological order needed to compare the
+	service baseline, incident window, and recovery.
+
+4. **Normal behaviour:** The records at `10:00`–`10:04` and `10:07`–`10:09`
+	appear normal. They have response times from 120–150 ms, CPU utilization from
+	42–50%, memory utilization from 51–57%, `INFO` log levels, and successful
+	payment messages. This accounts for 8 of the 10 observations.
+
+5. **Unusual behaviour:** The records at `10:05` and `10:06` form a short
+	incident. Response time rises to 610 ms and 640 ms, and the log messages
+	report a payment-service timeout and a database connection timeout. At
+	`10:06`, CPU reaches 94% and memory reaches 91%; both exceed the detector's
+	80% thresholds. The two records also exceed the detector's 500 ms response
+	time threshold and have `ERROR` log levels. Metrics and logs return to the
+	normal range at `10:07`, suggesting the issue is temporary in this sample.
+
 ## Repository Components
 
 | Concern | File or component | Purpose |
